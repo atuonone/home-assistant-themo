@@ -1,0 +1,15 @@
+# some helpers to control Themo from GUI
+
+# Set Themo mode for deviceid
+# repeat for each deviceid, replace room1 and deviceid 
+- alias: Themo_room1_mode
+  trigger:
+    platform: state
+    entity_id:
+    - input_select.themo_room1_mode
+  action:
+  - service: rest_command.themo_state
+    data:
+      deviceid: YOUR_deviceid
+      set_themo_state: '{{ states(''input_select.themo_room1_mode'') }}'
+  id: 3573753754746346
