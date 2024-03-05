@@ -1,0 +1,94 @@
+# Define input_select 
+# repeat for each Themo device
+input_select:
+
+  themo_room1_mode:
+    name: themo_man_room1
+    options:
+      - "Off"
+      - "Manual"
+      - "SLS"
+    icon: mdi:target
+    
+# Create switches
+# repeat for each Themo device
+
+switch:
+  - platform: template
+    switches:
+      room1:
+        turn_on:
+          service: rest_command.themo_state
+          data:
+            deviceid: YOUR_DEVICE_ID
+            set_themo_state: Manual
+        turn_off:
+          service: rest_command.themo_state
+          data:
+            deviceid: YOUR_DEVICE_ID
+            set_themo_state: "Off"
+
+# Themo HTTP post commands for deviceid
+
+rest_command:
+  themo_state:
+    url: "https://app.themo.io/Api/Devices/{{ deviceid }}/Message/Mode"
+    method: post
+    headers:
+      Authorization: !secret my_sensor_secret_token
+      Content-Type: "application/json"
+    payload: '{"CMode":"{{ set_themo_state }}"}'
+
+  themo_temperature:
+    url: "https://app.themo.io/Api/Devices/{{ deviceid }}/Message/Temperature"
+    method: post
+    headers:
+      Authorization: !secret my_sensor_secret_token
+      Content-Type: "application/json"
+    payload: '{"CMT":"{{ temperature }}"}'
+
+# Get Themo data for deviceid
+# repeat for each Themo device
+
+  #Temperature
+- platform: rest
+  name: Themo_room1_temperature
+  resource: https://app.themo.io/Api/Devices/deviceid/Data?from=null&to=null
+  headers:
+    Authorization: !secret my_sensor_secret_token
+    Content-Type: application/json
+  value_template: "{{ value_json[0]['TimeSeries'][23]['Values'][0] }}"
+
+# Power and energy consumption
+- platform: rest
+  name: Themo_room1_power 
+  resource: https://app.themo.io/Api/Devices/deviceid/Data?from=null&to=null
+  headers:
+    Authorization: !secret my_sensor_secret_token
+    Content-Type: application/json
+
+  scan_interval: 600
+  device_class: energy
+  state_class: measurement
+  unit_of_measurement: kWh
+
+  value_template: "{{ value_json[0]['TimeSeries'][23]['Values'][3] | float(0) * 1000 }}"
+
+# Mode of thermostat
+- platform: rest
+  name: Themo_room1_mode 
+  resource: https://app.themo.io/api/devices/deviceid/state
+  headers:
+    Authorization: !secret my_sensor_secret_token
+    Content-Type: application/json
+  value_template: "{{ value_json['Mode'] }}"
+
+# Thermostat target value
+- platform: rest
+  name: Themo_room1_thermostat
+  resource: https://app.themo.io/api/devices/deviceid/state
+  headers:
+    Authorization: !secret my_sensor_secret_token
+    Content-Type: application/json
+  value_template: "{{ value_json['MT'] }}"
+
